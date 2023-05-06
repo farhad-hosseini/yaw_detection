@@ -27,6 +27,14 @@ class Yaw:
         print(self.model.summary())
 
 
+    def change_initial_point_and_direction(self , yaw): # start from <-- and clockwise
+        if 0 <= yaw <= 90 :
+            return 90 - yaw
+        
+        return 450 - yaw
+        
+
+
     def downsample_image(self , img):
         img = Image.fromarray(img)
         # Calculate new width based on desired height of 300 pixels
@@ -39,15 +47,36 @@ class Yaw:
 
     def detect_main_car(self , img):
         results = self.model_yolov5(img)
-        cars = results.pandas().xyxy[0][results.pandas().xyxy[0]['name'] == 'car']
+        cars0 = results.pandas().xyxy[0][results.pandas().xyxy[0]['name'] == 'car']
         vans = results.pandas().xyxy[0][results.pandas().xyxy[0]['name'] == 'van']
         trucks = results.pandas().xyxy[0][results.pandas().xyxy[0]['name'] == 'truck']
-        cars = pd.concat([cars, vans, trucks], axis=0)
+        cars = pd.concat([cars0, vans , trucks], axis=0)
         cars.reset_index(drop=True, inplace=True)
         if len(cars) == 0:
             return None
         biggest_car = cars.iloc[(cars['xmax'] - cars['xmin']).argmax()]
+
+        if biggest_car['name'] == 'truck' or  biggest_car['name'] == 'van':
+            center_bb_x1 = img.shape[1] * 0.25
+            center_bb_x2 = img.shape[1] * 0.75
+            center_bb_y1 = img.shape[0] * 0.25
+            center_bb_y2 = img.shape[0] * 0.75
+
+            car_center_x = (biggest_car['xmax'] - biggest_car['xmin']) / 2
+            car_center_y = (biggest_car['ymax'] - biggest_car['ymin']) / 2
+
+            if (center_bb_x1 <= car_center_x <= center_bb_x2)  and (center_bb_y1 <= car_center_y <= center_bb_y2) :
+                biggest_car = biggest_car
+            else:
+                cars = cars0
+                if len(cars) == 0:
+                    return None
+                biggest_car = cars.iloc[(cars['xmax'] - cars['xmin']).argmax()]
         return biggest_car
+    
+
+
+    
     
     def predict_yaw(self , img):
         # img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
@@ -87,6 +116,8 @@ class Yaw:
         yaw += 90
         if yaw > 360:
             yaw -= 360
+
+        yaw = self.change_initial_point_and_direction(yaw)
         return yaw 
     
 
