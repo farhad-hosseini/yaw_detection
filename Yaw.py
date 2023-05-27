@@ -6,6 +6,8 @@ import time
 from PIL import Image
 import pandas as pd
 
+from keras.models import load_model
+
 
 from net.bbox_3D_net import bbox_3D_net
 
@@ -18,10 +20,12 @@ class Yaw:
     def __init__(self):
         self.model_yolov5 = torch.hub.load('ultralytics/yolov5', 'yolov5s', pretrained=True)
         # self.model_yolov5.conf = 0.4
-        self.model = bbox_3D_net((224,224,3))
-        self.model.load_weights(r'model_saved/weights.h5')
+        # self.model = bbox_3D_net((224,224,3))
+        # self.model.load_weights(r'model_saved/weights.h5')
+        self.model = load_model("model_saved/Yaw_model.h5")
+        print("Keras model loaded !!")
 
-        self.important_angles = [0 , 60 , 90  , 110 , 190 , 240 , 270 , 305 , 350]
+        self.important_angles = [0 , 60 , 90  , 110 , 170 , 240 , 270 , 305 , 350]
         self.angle_names = ["left" , "front-left" , "front" , "front-right" , "right" , "back-right" , "back" , "back-left" , "left"]
 
         print(self.model.summary())
