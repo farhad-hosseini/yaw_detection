@@ -97,6 +97,7 @@ class Yaw:
         patch = cv2.resize(patch, (224, 224))
         patch = patch - np.array([[[103.939, 116.779, 123.68]]])
         patch = np.expand_dims(patch, 0)
+        print("TTTTTTT:  " , patch.shape)
         prediction = self.model.predict(patch)
 
         max_anc = np.argmax(prediction[2][0])
